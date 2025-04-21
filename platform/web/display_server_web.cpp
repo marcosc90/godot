@@ -191,18 +191,23 @@ void DisplayServerWeb::_key_callback(const String &p_key_event_code, const Strin
 		c = unicode[0];
 	}
 
-	Key keycode = dom_code2godot_scancode(p_key_event_code.utf8().get_data(), p_key_event_key.utf8().get_data(), false);
-	Key scancode = dom_code2godot_scancode(p_key_event_code.utf8().get_data(), p_key_event_key.utf8().get_data(), true);
+	Key keycode = dom_code2godot_scancode(p_key_event_code.utf8().get_data(), p_key_event_key.utf8().get_data(), true);
 	KeyLocation location = dom_code2godot_key_location(p_key_event_code.utf8().get_data());
+	Key key_label = keycode;
+
+	// For printable ASCII characters (0x20-0x7E), override the label
+	if ((keycode < Key::KEY_0 || keycode > Key::KEY_9) && Key::SPACE <= keycode && keycode <= Key::ASCIITILDE) {
+		key_label = fix_key_label(c, keycode);
+	}
 
 	DisplayServerWeb::KeyEvent ke;
 
 	ke.pressed = p_pressed;
 	ke.echo = p_repeat;
 	ke.raw = true;
-	ke.keycode = fix_keycode(c, keycode);
-	ke.physical_keycode = scancode;
-	ke.key_label = fix_key_label(c, keycode);
+	ke.keycode = keycode;
+	ke.physical_keycode = keycode;
+	ke.key_label = key_label;
 	ke.unicode = fix_unicode(c);
 	ke.location = location;
 	ke.mod = p_modifiers;
